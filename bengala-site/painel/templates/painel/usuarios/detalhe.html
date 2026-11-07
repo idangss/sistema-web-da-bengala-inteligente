@@ -1,0 +1,111 @@
+{% extends "painel/base.html" %}
+{% load painel_extras %}
+{% block titulo %}{{ titular.nome }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Caminho"><a href="{% url 'usuarios' %}">← Voltar para Usuários</a></nav>
+<div class="cabecalho-pagina">
+  <h1>{{ titular.nome }} {% if titular.ativo %}<span class="selo selo-ok">Ativo</span>{% else %}<span class="selo selo-off">Desativado</span>{% endif %}</h1>
+  <div class="acoes">
+    <a class="btn btn-azul" href="{% url 'usuario_editar' titular.pk %}">Editar dados</a>
+    <form method="post" action="{% url 'usuario_status' titular.pk %}">
+      {% csrf_token %}
+      {% if titular.ativo %}
+      <input type="hidden" name="acao" value="desativar">
+      <button class="btn btn-perigo" type="submit">Desativar usuário</button>
+      {% else %}
+      <input type="hidden" name="acao" value="reativar">
+      <button class="btn btn-amarelo" type="submit">Reativar usuário</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="grade-2">
+  <section class="cartao" aria-labelledby="t-dados">
+    <h2 id="t-dados">Dados</h2>
+    <dl class="dados">
+      <dt>E-mail</dt><dd>{{ titular.email }}</dd>
+      <dt>Telefone</dt><dd>{{ titular.telefone }}</dd>
+      <dt>Localização</dt><dd>{% if titular.consentimento_localizacao %}Autorizada{% else %}Não autorizada: as posições não são exibidas{% endif %}</dd>
+      <dt>Cadastrado em</dt><dd>{{ titular.data_cadastro|date:"d/m/Y H:i" }}</dd>
+      {% if not titular.ativo %}<dt>Desativado em</dt><dd>{{ titular.excluido_em|date:"d/m/Y H:i" }}</dd>{% endif %}
+    </dl>
+  </section>
+
+  <section class="cartao" aria-labelledby="t-contatos">
+    <h2 id="t-contatos">Contatos de emergência</h2>
+    <div class="table-responsive">
+      <table class="table tabela">
+        <caption>Avisados no S.O.S., em ordem de prioridade</caption>
+        <thead><tr><th scope="col">Prioridade</th><th scope="col">Nome</th><th scope="col">Parentesco</th><th scope="col">Telefone</th><th scope="col">Acompanha localização</th></tr></thead>
+        <tbody>
+          {% for c in contatos %}
+          <tr><td>{{ c.prioridade }}</td><td>{{ c.nome }}</td><td>{{ c.parentesco|default:"—" }}</td><td>{{ c.telefone }}</td><td>{% if c.pode_monitorar %}Sim{% else %}Não{% endif %}</td></tr>
+          {% empty %}
+          <tr><td colspan="5">Nenhum contato cadastrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<section class="cartao" aria-labelledby="t-bengalas">
+  <h2 id="t-bengalas">Bengalas</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Vínculos atuais e anteriores</caption>
+      <thead><tr><th scope="col">Bengala</th><th scope="col">Início</th><th scope="col">Fim</th></tr></thead>
+      <tbody>
+        {% for v in vinculos %}
+        <tr><td><a href="{% url 'bengala_detalhe' v.dispositivo_id %}">{{ v.dispositivo.numero_serie }}</a></td><td>{{ v.data_inicio|date:"d/m/Y H:i" }}</td><td>{{ v.data_fim|date:"d/m/Y H:i"|default:"Vínculo atual" }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3">Nenhuma bengala vinculada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cartao" aria-labelledby="t-sessoes">
+  <h2 id="t-sessoes">Últimas sessões de uso</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>As 10 sessões mais recentes</caption>
+      <thead><tr><th scope="col">Início</th><th scope="col">Duração</th><th scope="col">Bengala</th><th scope="col">Distância</th><th scope="col">Detecções</th><th scope="col">S.O.S.</th><th scope="col">Ações</th></tr></thead>
+      <tbody>
+        {% for s in sessoes %}
+        <tr>
+          <td>{{ s.inicio|date:"d/m/Y H:i" }}</td>
+          <td>{{ s|duracao|default:"Em andamento" }}</td>
+          <td>{{ s.dispositivo.numero_serie }}</td>
+          <td>{% if s.distancia_m is not None %}{{ s.distancia_m|floatformat:0 }} m{% else %}—{% endif %}</td>
+          <td>{{ s.n_eventos }}</td>
+          <td>{{ s.n_sos }}</td>
+          <td><a class="btn btn-sm btn-contorno" href="{% url 'sessao_detalhe' s.pk %}">Ver sessão<span class="visually-hidden"> de {{ s.inicio|date:"d/m/Y H:i" }}</span></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">Nenhuma sessão registrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cartao" aria-labelledby="t-sos">
+  <h2 id="t-sos">Alertas de S.O.S.</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Os 10 alertas mais recentes</caption>
+      <thead><tr><th scope="col">Disparado em</th><th scope="col">Origem</th><th scope="col">Confirmado por</th><th scope="col">Status</th></tr></thead>
+      <tbody>
+        {% for a in alertas %}
+        <tr><td>{{ a.disparado_em|date:"d/m/Y H:i:s" }}</td><td>{{ a.get_origem_display }}</td><td>{{ a.get_confirmado_por_display|default:"—" }}</td><td>{{ a.get_status_display }}</td></tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhum alerta registrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

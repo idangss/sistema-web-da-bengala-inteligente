@@ -1,0 +1,53 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Painel{% endblock %} · Bengala Inteligente</title>
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
+  {% block css_extra %}{% endblock %}
+  <link href="{% static 'painel/css/site.css' %}" rel="stylesheet">
+</head>
+<body>
+  <a class="pular-link" href="#conteudo">Pular para o conteúdo</a>
+  {% block corpo %}
+  <div class="layout">
+    <header class="lateral" aria-label="Navegação principal">
+      <div class="marca">
+        <i class="bi bi-person-walking" aria-hidden="true"></i>
+        <span>Bengala Inteligente</span>
+      </div>
+      <nav aria-label="Menu">
+        <ul class="menu">
+          <li><a href="{% url 'painel' %}" {% if secao == 'painel' %}aria-current="page"{% endif %}><i class="bi bi-speedometer2" aria-hidden="true"></i> Painel</a></li>
+          <li><a href="{% url 'usuarios' %}" {% if secao == 'usuarios' %}aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Usuários</a></li>
+          <li><a href="{% url 'bengalas' %}" {% if secao == 'bengalas' %}aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Bengalas</a></li>
+          <li><a href="{% url 'sensores' %}" {% if secao == 'sensores' %}aria-current="page"{% endif %}><i class="bi bi-activity" aria-hidden="true"></i> Sensores</a></li>
+          <li><a href="{% url 'eventos' %}" {% if secao == 'eventos' %}aria-current="page"{% endif %}><i class="bi bi-list-ul" aria-hidden="true"></i> Eventos</a></li>
+        </ul>
+      </nav>
+      <div class="conta">
+        <p class="mb-2">Conectado como<br><strong>{{ user.email }}</strong></p>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-amarelo w-100"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair</button>
+        </form>
+      </div>
+    </header>
+
+    <main id="conteudo" class="principal" tabindex="-1">
+      {% if messages %}
+      <div role="status" aria-live="polite">
+        {% for m in messages %}
+        <div class="alert {% if m.tags == 'error' %}alert-danger{% elif m.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">{{ m }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+  {% endblock %}
+  {% block js %}{% endblock %}
+</body>
+</html>

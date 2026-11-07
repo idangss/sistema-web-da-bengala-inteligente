@@ -1,0 +1,15 @@
+[Unit]
+Description=Site e API da Bengala Inteligente (Django + gunicorn)
+After=network.target mariadb.service
+Requires=mariadb.service
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/bengala-site
+ExecStart=/home/pi/bengala-site/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 30
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

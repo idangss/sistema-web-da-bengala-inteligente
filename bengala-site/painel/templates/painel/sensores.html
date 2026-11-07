@@ -1,0 +1,104 @@
+{% extends "painel/base.html" %}
+{% load static painel_extras %}
+{% block titulo %}Sensores{% endblock %}
+{% block conteudo %}
+<h1>Sensores</h1>
+
+{% if not lista %}
+<p>Nenhuma bengala ativa cadastrada.</p>
+{% else %}
+<form method="get" class="filtros cartao" aria-label="Escolher bengala">
+  <div>
+    <label class="form-label" for="bengala">Bengala</label>
+    <select class="form-select" id="bengala" name="bengala">
+      {% for d in lista %}<option value="{{ d.pk }}" {% if bengala and d.pk == bengala.pk %}selected{% endif %}>{{ d.numero_serie }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="filtros-botoes"><button class="btn btn-azul" type="submit">Mostrar</button></div>
+</form>
+
+<section aria-labelledby="t-atual">
+  <h2 id="t-atual" class="visually-hidden">Leitura atual</h2>
+  <ul class="indicadores">
+    <li class="indicador"><span class="indicador-valor">{% if bengala.bateria is not None %}{{ bengala.bateria }}%{% else %}—{% endif %}</span><span class="indicador-rotulo">bateria</span></li>
+    <li class="indicador"><span class="indicador-valor">{% if bengala.rssi is not None %}{{ bengala.rssi }} dBm{% else %}—{% endif %}</span><span class="indicador-rotulo">sinal Bluetooth</span></li>
+    <li class="indicador"><span class="indicador-valor indicador-texto">{% if bengala.conectada %}Conectada{% else %}Desconectada{% endif %}</span><span class="indicador-rotulo">última comunicação: {{ bengala.ultima_comunicacao|date:"d/m/Y H:i"|default:"nunca" }}</span></li>
+  </ul>
+</section>
+
+<section class="cartao" aria-labelledby="t-grafico">
+  <h2 id="t-grafico">Bateria e sinal nas últimas leituras</h2>
+  {% if leituras %}
+  <div class="area-grafico"><canvas id="grafico-telemetria" role="img" aria-label="Gráfico de linha da bateria e do sinal Bluetooth. Os mesmos números estão na tabela abaixo."></canvas></div>
+  <details class="mt-2">
+    <summary>Ver as leituras em tabela</summary>
+    <table class="table tabela mt-2">
+      <caption>Últimas {{ leituras|length }} leituras de telemetria</caption>
+      <thead><tr><th scope="col">Data e hora</th><th scope="col">Bateria</th><th scope="col">Sinal</th></tr></thead>
+      <tbody>{% for t in leituras %}<tr><td>{{ t.registrado_em|date:"d/m/Y H:i" }}</td><td>{{ t.bateria_pct }}%</td><td>{{ t.rssi_ble|default:"—" }} dBm</td></tr>{% endfor %}</tbody>
+    </table>
+  </details>
+  {% else %}
+  <p>Esta bengala ainda não enviou telemetria.</p>
+  {% endif %}
+</section>
+
+<section class="cartao" aria-labelledby="t-sensores">
+  <h2 id="t-sensores">Sensores e última detecção</h2>
+  <p class="text-secondary">O banco ainda não grava leituras brutas nem o estado de cada sensor. Aqui aparece a última vez que cada um gerou um evento.</p>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Componentes da bengala {{ bengala.numero_serie }}</caption>
+      <thead><tr><th scope="col">Componente</th><th scope="col">Detecta</th><th scope="col">Último evento</th><th scope="col">Medida</th></tr></thead>
+      <tbody>
+        {% for s in sensores %}
+        <tr>
+          <td>{{ s.nome }}</td>
+          <td>{{ s.funcao }}</td>
+          <td>{% if s.ultimo %}{{ s.ultimo.get_tipo_display }} em {{ s.ultimo.ocorrido_em|date:"d/m/Y H:i" }}{% else %}Nenhum registro{% endif %}</td>
+          <td>{% if s.ultimo and s.ultimo.distancia_cm is not None %}{{ s.ultimo.distancia_cm }} cm, alerta {{ s.ultimo.nivel_alerta|nivel|lower }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td>IMU (acelerômetro e giroscópio)</td>
+          <td>Quedas</td>
+          <td>{% if ultima_queda %}Queda em {{ ultima_queda.disparado_em|date:"d/m/Y H:i" }} ({{ ultima_queda.get_status_display|lower }}){% else %}Nenhum registro{% endif %}</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Botão S.O.S.</td>
+          <td>Pedido de socorro manual</td>
+          <td>{% if ultimo_botao %}Acionado em {{ ultimo_botao.disparado_em|date:"d/m/Y H:i" }} ({{ ultimo_botao.get_status_display|lower }}){% else %}Nenhum registro{% endif %}</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Localização</td>
+          <td>Vem do GPS do celular (a bengala não tem GPS)</td>
+          <td colspan="2">Gravada junto com cada evento, se o usuário autorizou.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if configuracao %}
+<section class="cartao" aria-labelledby="t-cal">
+  <h2 id="t-cal">Calibração do sensor inferior</h2>
+  <dl class="dados dados-colunas">
+    <dt>Altura</dt><dd>{{ configuracao.altura_sensor_cm }} cm</dd>
+    <dt>Ângulo</dt><dd>{{ configuracao.angulo_sensor_graus }}°</dd>
+    <dt>Limiar de buraco</dt><dd>{{ configuracao.limiar_buraco_cm }} cm</dd>
+    <dt>Alcance frontal</dt><dd>{{ configuracao.limiar_frontal_cm }} cm</dd>
+  </dl>
+</section>
+{% endif %}
+
+{{ grafico|json_script:"dados-telemetria" }}
+{% endif %}
+{% endblock %}
+{% block js %}
+{% if leituras %}
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}"></script>
+<script src="{% static 'painel/js/sensores.js' %}"></script>
+{% endif %}
+{% endblock %}

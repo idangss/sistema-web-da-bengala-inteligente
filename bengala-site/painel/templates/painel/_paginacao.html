@@ -1,0 +1,16 @@
+{% if pagina.paginator.num_pages > 1 %}
+<nav aria-label="Paginação">
+  <p class="mb-2">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }} ({{ pagina.paginator.count }} registros)</p>
+  <ul class="pagination flex-wrap">
+    {% if pagina.has_previous %}
+    <li class="page-item"><a class="page-link" href="{% querystring pagina=1 %}">Primeira</a></li>
+    <li class="page-item"><a class="page-link" href="{% querystring pagina=pagina.previous_page_number %}" rel="prev">Anterior</a></li>
+    {% endif %}
+    <li class="page-item active" aria-current="page"><span class="page-link">{{ pagina.number }}</span></li>
+    {% if pagina.has_next %}
+    <li class="page-item"><a class="page-link" href="{% querystring pagina=pagina.next_page_number %}" rel="next">Próxima</a></li>
+    <li class="page-item"><a class="page-link" href="{% querystring pagina=pagina.paginator.num_pages %}">Última</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

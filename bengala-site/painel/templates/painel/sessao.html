@@ -1,0 +1,64 @@
+{% extends "painel/base.html" %}
+{% load painel_extras %}
+{% block titulo %}Sessão {{ sessao.pk }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Caminho"><a href="{% url 'bengala_detalhe' sessao.dispositivo_id %}">← Voltar para a bengala {{ sessao.dispositivo.numero_serie }}</a></nav>
+<h1>Sessão de {{ sessao.inicio|date:"d/m/Y H:i" }}</h1>
+
+<section class="cartao" aria-labelledby="t-resumo">
+  <h2 id="t-resumo">Resumo</h2>
+  <dl class="dados dados-colunas">
+    <dt>Usuário</dt><dd><a href="{% url 'usuario_detalhe' sessao.titular_id %}">{{ sessao.titular.nome }}</a></dd>
+    <dt>Bengala</dt><dd>{{ sessao.dispositivo.numero_serie }}</dd>
+    <dt>Início</dt><dd>{{ sessao.inicio|date:"d/m/Y H:i:s" }}</dd>
+    <dt>Fim</dt><dd>{{ sessao.fim|date:"d/m/Y H:i:s"|default:"Em andamento" }}</dd>
+    <dt>Duração</dt><dd>{{ sessao|duracao|default:"—" }}</dd>
+    <dt>Distância</dt><dd>{% if sessao.distancia_m is not None %}{{ sessao.distancia_m|floatformat:0 }} m{% else %}—{% endif %}</dd>
+  </dl>
+</section>
+
+<section class="cartao" aria-labelledby="t-det">
+  <h2 id="t-det">Detecções</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Em ordem de acontecimento</caption>
+      <thead><tr><th scope="col">Hora</th><th scope="col">Tipo</th><th scope="col">Nível</th><th scope="col">Distância</th></tr></thead>
+      <tbody>
+        {% for e in deteccoes %}
+        <tr><td>{{ e.ocorrido_em|date:"H:i:s" }}</td><td>{{ e.get_tipo_display }}</td><td>{{ e.nivel_alerta|nivel }}</td><td>{% if e.distancia_cm is not None %}{{ e.distancia_cm }} cm{% else %}—{% endif %}</td></tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhuma detecção nesta sessão.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cartao" aria-labelledby="t-sos">
+  <h2 id="t-sos">S.O.S. e avisos enviados</h2>
+  {% for a in alertas %}
+  <h3 class="h6">{{ a.get_origem_display }} às {{ a.disparado_em|date:"H:i:s" }}: {{ a.get_status_display|lower }}{% if a.cancelado_em %} às {{ a.cancelado_em|date:"H:i:s" }}{% endif %}</h3>
+  <ul>
+    {% for n in a.notificacoes.all %}
+    <li>{{ n.get_canal_display }} para {{ n.contato.nome }}: {{ n.get_status_envio_display|lower }}{% if n.enviado_em %} às {{ n.enviado_em|date:"H:i:s" }}{% endif %}</li>
+    {% empty %}
+    <li>Nenhum aviso registrado.</li>
+    {% endfor %}
+  </ul>
+  {% empty %}
+  <p>Nenhum S.O.S. nesta sessão.</p>
+  {% endfor %}
+</section>
+
+<section class="cartao" aria-labelledby="t-traj">
+  <h2 id="t-traj">Navegação</h2>
+  <ul>
+    {% for t in trajetos %}
+    <li>Destino <strong>{{ t.destino_texto }}</strong>: {{ t.get_status_display|lower }}, {{ t.n_pontos }} pontos de GPS gravados.</li>
+    {% empty %}
+    <li>Nenhuma navegação nesta sessão.</li>
+    {% endfor %}
+  </ul>
+  <p class="text-secondary small">O trajeto de uma pessoa não é desenhado no mapa (LGPD).</p>
+</section>
+{% endblock %}

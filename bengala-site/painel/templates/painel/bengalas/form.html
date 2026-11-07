@@ -1,0 +1,17 @@
+{% extends "painel/base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Caminho">
+  {% if bengala %}<a href="{% url 'bengala_detalhe' bengala.pk %}">← Voltar para a bengala {{ bengala.numero_serie }}</a>{% else %}<a href="{% url 'bengalas' %}">← Voltar para Bengalas</a>{% endif %}
+</nav>
+<h1>{{ titulo }}</h1>
+<div class="cartao cartao-form">
+  {% include "painel/_erros_form.html" %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}{% include "painel/_campo.html" %}{% endfor %}
+    <p class="text-secondary small">Campos com * são obrigatórios. O usuário é associado na página da bengala, depois de salvar.</p>
+    <button class="btn btn-azul" type="submit">Salvar</button>
+  </form>
+</div>
+{% endblock %}

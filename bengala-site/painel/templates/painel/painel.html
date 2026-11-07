@@ -1,0 +1,90 @@
+{% extends "painel/base.html" %}
+{% load static painel_extras %}
+{% block titulo %}Painel{% endblock %}
+{% block css_extra %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
+{% block conteudo %}
+<h1>Painel</h1>
+
+<section aria-labelledby="titulo-indicadores">
+  <h2 id="titulo-indicadores" class="visually-hidden">Indicadores</h2>
+  <ul class="indicadores">
+    <li class="indicador"><span class="indicador-valor">{{ contadores.titulares }}</span><span class="indicador-rotulo">usuários ativos</span></li>
+    <li class="indicador"><span class="indicador-valor">{{ contadores.bengalas }}</span><span class="indicador-rotulo">bengalas cadastradas</span></li>
+    <li class="indicador"><span class="indicador-valor">{{ contadores.conectadas }}</span><span class="indicador-rotulo">bengalas conectadas agora</span></li>
+    <li class="indicador"><span class="indicador-valor">{{ contadores.deteccoes_7_dias }}</span><span class="indicador-rotulo">detecções nos últimos 7 dias</span></li>
+    <li class="indicador {% if contadores.sos_abertos %}indicador-alerta{% endif %}"><span class="indicador-valor">{{ contadores.sos_abertos }}</span><span class="indicador-rotulo">S.O.S. em aberto</span></li>
+  </ul>
+</section>
+
+<div class="grade-2">
+  <section class="cartao" aria-labelledby="titulo-grafico">
+    <h2 id="titulo-grafico">Detecções por dia</h2>
+    <p class="text-secondary">Obstáculos, buracos e degraus registrados nos últimos 7 dias.</p>
+    <div class="area-grafico"><canvas id="grafico-dias" role="img" aria-label="Gráfico de barras das detecções por dia. Os mesmos números estão na tabela abaixo."></canvas></div>
+    <details class="mt-2">
+      <summary>Ver os números em tabela</summary>
+      <table class="table tabela mt-2">
+        <caption>Detecções por dia</caption>
+        <thead><tr><th scope="col">Dia</th><th scope="col">Detecções</th></tr></thead>
+        <tbody>{% for d in por_dia %}<tr><td>{{ d.dia|date:"d/m/Y" }}</td><td>{{ d.total }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </details>
+  </section>
+
+  <section class="cartao" aria-labelledby="titulo-mapa">
+    <h2 id="titulo-mapa">Última localização</h2>
+    {% if localizacao %}
+    <p>
+      <strong>{{ localizacao.titular }}</strong>, bengala {{ localizacao.bengala }}:
+      {{ localizacao.origem|lower }} em {{ localizacao.quando|date:"d/m/Y H:i" }}.<br>
+      Coordenadas {{ localizacao.lat|coordenada }}, {{ localizacao.lng|coordenada }}.
+    </p>
+    <div id="mapa" class="mapa" role="region" aria-label="Mapa com a última localização registrada"></div>
+    {% else %}
+    <p>Nenhuma localização registrada de usuário com consentimento.</p>
+    {% endif %}
+    <p class="text-secondary small mt-2">
+      Só aparecem posições de usuários que autorizaram a localização.
+      {% if buracos %}Os círculos amarelos marcam buracos detectados 3 vezes ou mais no mesmo ponto.{% else %}Ainda não há buraco detectado 3 vezes ou mais no mesmo ponto.{% endif %}
+    </p>
+  </section>
+</div>
+
+<section class="cartao" aria-labelledby="titulo-bengalas">
+  <h2 id="titulo-bengalas">Status das bengalas</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Conectada = telemetria recebida nos últimos {{ minutos_conectada }} minutos</caption>
+      <thead><tr><th scope="col">Bengala</th><th scope="col">Usuário</th><th scope="col">Status</th><th scope="col">Bateria</th><th scope="col">Última comunicação</th></tr></thead>
+      <tbody>
+        {% for b in bengalas %}
+        <tr>
+          <td><a href="{% url 'bengala_detalhe' b.pk %}">{{ b.numero_serie }}</a></td>
+          <td>{% if b.titular_atual_id %}<a href="{% url 'usuario_detalhe' b.titular_atual_id %}">{{ b.titular_atual_nome }}</a>{% else %}<span class="text-secondary">Sem titular</span>{% endif %}</td>
+          <td>{% include "painel/_selo_conexao.html" %}</td>
+          <td>{% if b.bateria is not None %}{{ b.bateria }}%{% else %}—{% endif %}</td>
+          <td>{{ b.ultima_comunicacao|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Nenhuma bengala cadastrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cartao" aria-labelledby="titulo-eventos">
+  <h2 id="titulo-eventos">Últimos eventos</h2>
+  {% include "painel/_tabela_eventos.html" with eventos=ultimos_eventos legenda="Os 8 eventos mais recentes" %}
+  <a class="btn btn-azul" href="{% url 'eventos' %}">Ver histórico completo</a>
+</section>
+
+{{ grafico|json_script:"dados-grafico" }}
+{{ mapa|json_script:"dados-mapa" }}
+{{ buracos|json_script:"dados-buracos" }}
+{% endblock %}
+{% block js %}
+<script src="{% static 'vendor/chartjs/chart.umd.js' %}"></script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'painel/js/painel.js' %}"></script>
+{% endblock %}

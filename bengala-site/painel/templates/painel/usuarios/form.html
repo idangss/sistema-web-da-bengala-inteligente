@@ -1,0 +1,17 @@
+{% extends "painel/base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Caminho">
+  {% if titular %}<a href="{% url 'usuario_detalhe' titular.pk %}">← Voltar para {{ titular.nome }}</a>{% else %}<a href="{% url 'usuarios' %}">← Voltar para Usuários</a>{% endif %}
+</nav>
+<h1>{{ titulo }}</h1>
+<div class="cartao cartao-form">
+  {% include "painel/_erros_form.html" %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% for campo in form %}{% include "painel/_campo.html" %}{% endfor %}
+    <p class="text-secondary small">Campos com * são obrigatórios.</p>
+    <button class="btn btn-azul" type="submit">Salvar</button>
+  </form>
+</div>
+{% endblock %}

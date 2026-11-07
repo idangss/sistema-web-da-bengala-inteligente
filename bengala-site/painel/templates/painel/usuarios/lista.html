@@ -1,0 +1,51 @@
+{% extends "painel/base.html" %}
+{% block titulo %}Usuários{% endblock %}
+{% block conteudo %}
+<div class="cabecalho-pagina">
+  <h1>Usuários</h1>
+  <a class="btn btn-amarelo" href="{% url 'usuario_novo' %}"><i class="bi bi-person-plus" aria-hidden="true"></i> Cadastrar usuário</a>
+</div>
+<p class="text-secondary">Pessoas que usam a bengala (tabela <code>titular</code>).</p>
+
+<form method="get" class="filtros cartao" role="search" aria-label="Buscar usuários">
+  <div>
+    <label class="form-label" for="busca">Buscar por nome, e-mail ou telefone</label>
+    <input class="form-control" type="search" id="busca" name="q" value="{{ busca }}">
+  </div>
+  <div>
+    <label class="form-label" for="status">Status</label>
+    <select class="form-select" id="status" name="status">
+      <option value="ativos" {% if status == "ativos" %}selected{% endif %}>Ativos</option>
+      <option value="desativados" {% if status == "desativados" %}selected{% endif %}>Desativados</option>
+      <option value="todos" {% if status == "todos" %}selected{% endif %}>Todos</option>
+    </select>
+  </div>
+  <div class="filtros-botoes"><button class="btn btn-azul" type="submit">Buscar</button></div>
+</form>
+
+<div class="table-responsive cartao">
+  <table class="table tabela">
+    <caption>Usuários encontrados: {{ pagina.paginator.count }}</caption>
+    <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Telefone</th><th scope="col">Bengala</th><th scope="col">Localização</th><th scope="col">Status</th><th scope="col">Ações</th></tr></thead>
+    <tbody>
+      {% for t in pagina %}
+      <tr>
+        <td>{{ t.nome }}</td>
+        <td>{{ t.email }}</td>
+        <td>{{ t.telefone }}</td>
+        <td>{% if t.bengala_id %}<a href="{% url 'bengala_detalhe' t.bengala_id %}">{{ t.bengala_serie }}</a>{% else %}<span class="text-secondary">Nenhuma</span>{% endif %}</td>
+        <td>{% if t.consentimento_localizacao %}Autorizada{% else %}Não autorizada{% endif %}</td>
+        <td>{% if t.ativo %}<span class="selo selo-ok">Ativo</span>{% else %}<span class="selo selo-off">Desativado</span>{% endif %}</td>
+        <td class="acoes">
+          <a class="btn btn-sm btn-contorno" href="{% url 'usuario_detalhe' t.pk %}">Ver<span class="visually-hidden"> {{ t.nome }}</span></a>
+          <a class="btn btn-sm btn-contorno" href="{% url 'usuario_editar' t.pk %}">Editar<span class="visually-hidden"> {{ t.nome }}</span></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Nenhum usuário encontrado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "painel/_paginacao.html" %}
+{% endblock %}

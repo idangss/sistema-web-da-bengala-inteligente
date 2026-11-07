@@ -1,0 +1,15 @@
+{% if campo.widget_type == "checkbox" %}
+<div class="form-check mb-3 alvo-toque">
+  {{ campo }}
+  <label class="form-check-label" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+  {% if campo.help_text %}<div class="form-text" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</div>{% endif %}
+  {% if campo.errors %}<div class="text-danger" id="{{ campo.auto_id }}_error">{% for e in campo.errors %}{{ e }} {% endfor %}</div>{% endif %}
+</div>
+{% else %}
+<div class="mb-3">
+  <label class="form-label" for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span><span class="visually-hidden">(obrigatório)</span>{% endif %}</label>
+  {{ campo }}
+  {% if campo.help_text %}<div class="form-text" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</div>{% endif %}
+  {% if campo.errors %}<div class="text-danger mt-1" id="{{ campo.auto_id }}_error"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {% for e in campo.errors %}{{ e }} {% endfor %}</div>{% endif %}
+</div>
+{% endif %}

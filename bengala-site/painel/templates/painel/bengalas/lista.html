@@ -1,0 +1,50 @@
+{% extends "painel/base.html" %}
+{% block titulo %}Bengalas{% endblock %}
+{% block conteudo %}
+<div class="cabecalho-pagina">
+  <h1>Bengalas</h1>
+  <a class="btn btn-amarelo" href="{% url 'bengala_nova' %}"><i class="bi bi-plus-circle" aria-hidden="true"></i> Cadastrar bengala</a>
+</div>
+
+<form method="get" class="filtros cartao" role="search" aria-label="Buscar bengalas">
+  <div>
+    <label class="form-label" for="busca">Buscar por número de série ou endereço Bluetooth</label>
+    <input class="form-control" type="search" id="busca" name="q" value="{{ busca }}">
+  </div>
+  <div>
+    <label class="form-label" for="status">Status do cadastro</label>
+    <select class="form-select" id="status" name="status">
+      <option value="ativas" {% if status == "ativas" %}selected{% endif %}>Ativas</option>
+      <option value="desativadas" {% if status == "desativadas" %}selected{% endif %}>Desativadas</option>
+      <option value="todas" {% if status == "todas" %}selected{% endif %}>Todas</option>
+    </select>
+  </div>
+  <div class="filtros-botoes"><button class="btn btn-azul" type="submit">Buscar</button></div>
+</form>
+
+<div class="table-responsive cartao">
+  <table class="table tabela">
+    <caption>Bengalas encontradas: {{ pagina.paginator.count }}. Conectada = telemetria nos últimos {{ minutos_conectada }} minutos.</caption>
+    <thead><tr><th scope="col">Número de série</th><th scope="col">Bluetooth (MAC)</th><th scope="col">Firmware</th><th scope="col">Usuário</th><th scope="col">Conexão</th><th scope="col">Bateria</th><th scope="col">Ações</th></tr></thead>
+    <tbody>
+      {% for b in pagina %}
+      <tr>
+        <td>{{ b.numero_serie }}{% if not b.ativo %} <span class="selo selo-off">Desativada</span>{% endif %}</td>
+        <td><code>{{ b.mac_ble }}</code></td>
+        <td>{{ b.versao_firmware|default:"—" }}</td>
+        <td>{% if b.titular_atual_id %}<a href="{% url 'usuario_detalhe' b.titular_atual_id %}">{{ b.titular_atual_nome }}</a>{% else %}<span class="text-secondary">Sem titular</span>{% endif %}</td>
+        <td>{% include "painel/_selo_conexao.html" %}<br><span class="small text-secondary">{{ b.ultima_comunicacao|date:"d/m/Y H:i"|default:"Nunca comunicou" }}</span></td>
+        <td>{% if b.bateria is not None %}{{ b.bateria }}%{% else %}—{% endif %}</td>
+        <td class="acoes">
+          <a class="btn btn-sm btn-contorno" href="{% url 'bengala_detalhe' b.pk %}">Ver<span class="visually-hidden"> {{ b.numero_serie }}</span></a>
+          <a class="btn btn-sm btn-contorno" href="{% url 'bengala_editar' b.pk %}">Editar<span class="visually-hidden"> {{ b.numero_serie }}</span></a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Nenhuma bengala encontrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "painel/_paginacao.html" %}
+{% endblock %}

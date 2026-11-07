@@ -1,0 +1,20 @@
+{% extends "painel/base.html" %}
+{% block titulo %}Eventos{% endblock %}
+{% block conteudo %}
+<h1>Eventos</h1>
+<p class="text-secondary">Detecções, alertas de S.O.S. e avisos de bateria baixa (até {{ bateria_baixa }}%), do mais novo para o mais antigo.</p>
+
+<form method="get" class="filtros filtros-eventos cartao" aria-label="Filtrar eventos">
+  {% include "painel/_erros_form.html" %}
+  {% for campo in form %}<div>{% include "painel/_campo.html" %}</div>{% endfor %}
+  <div class="filtros-botoes">
+    <button class="btn btn-azul" type="submit">Filtrar</button>
+    <a class="btn btn-contorno" href="{% url 'eventos' %}">Limpar filtros</a>
+  </div>
+</form>
+
+<div class="cartao">
+  {% include "painel/_tabela_eventos.html" with eventos=pagina legenda="Eventos encontrados" %}
+  {% include "painel/_paginacao.html" %}
+</div>
+{% endblock %}

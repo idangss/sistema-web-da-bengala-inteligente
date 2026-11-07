@@ -1,0 +1,121 @@
+{% extends "painel/base.html" %}
+{% load painel_extras %}
+{% block titulo %}Bengala {{ bengala.numero_serie }}{% endblock %}
+{% block conteudo %}
+<nav aria-label="Caminho"><a href="{% url 'bengalas' %}">← Voltar para Bengalas</a></nav>
+<div class="cabecalho-pagina">
+  <h1>Bengala {{ bengala.numero_serie }} {% with b=bengala %}{% include "painel/_selo_conexao.html" %}{% endwith %}</h1>
+  <div class="acoes">
+    <a class="btn btn-azul" href="{% url 'bengala_editar' bengala.pk %}">Editar dados</a>
+    <a class="btn btn-contorno" href="{% url 'sensores' %}?bengala={{ bengala.pk }}">Ver sensores</a>
+    <form method="post" action="{% url 'bengala_status' bengala.pk %}">
+      {% csrf_token %}
+      {% if bengala.ativo %}
+      <input type="hidden" name="acao" value="desativar">
+      <button class="btn btn-perigo" type="submit">Desativar bengala</button>
+      {% else %}
+      <input type="hidden" name="acao" value="reativar">
+      <button class="btn btn-amarelo" type="submit">Reativar bengala</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="grade-2">
+  <section class="cartao" aria-labelledby="t-dados">
+    <h2 id="t-dados">Identificação</h2>
+    <dl class="dados">
+      <dt>Bluetooth (MAC)</dt><dd><code>{{ bengala.mac_ble }}</code></dd>
+      <dt>Firmware</dt><dd>{{ bengala.versao_firmware|default:"Não informado" }}</dd>
+      <dt>Ativada em</dt><dd>{{ bengala.data_ativacao|date:"d/m/Y H:i"|default:"Ainda não vinculada" }}</dd>
+      <dt>Última comunicação</dt><dd>{{ bengala.ultima_comunicacao|date:"d/m/Y H:i"|default:"Nunca" }}</dd>
+      <dt>Bateria</dt><dd>{% if bengala.bateria is not None %}{{ bengala.bateria }}%{% else %}Sem leitura{% endif %}</dd>
+      <dt>Status do cadastro</dt><dd>{% if bengala.ativo %}Ativa{% else %}Desativada em {{ bengala.excluido_em|date:"d/m/Y H:i" }}{% endif %}</dd>
+    </dl>
+  </section>
+
+  <section class="cartao" aria-labelledby="t-vinculo">
+    <h2 id="t-vinculo">Usuário associado</h2>
+    {% if bengala.titular_atual_id %}
+    <p>Com <a href="{% url 'usuario_detalhe' bengala.titular_atual_id %}"><strong>{{ bengala.titular_atual_nome }}</strong></a>.</p>
+    {% else %}
+    <p>Esta bengala não está com ninguém.</p>
+    {% endif %}
+    {% if sessao_aberta %}
+    <p class="alert alert-info">Há uma sessão de uso em andamento. O titular só pode ser trocado quando ela terminar.</p>
+    {% elif bengala.ativo %}
+    <form method="post" action="{% url 'bengala_vinculo' bengala.pk %}" class="mb-2">
+      {% csrf_token %}
+      {% with campo=form_vinculo.titular %}{% include "painel/_campo.html" %}{% endwith %}
+      <button class="btn btn-azul" type="submit" name="acao" value="vincular">{% if bengala.titular_atual_id %}Trocar titular{% else %}Vincular{% endif %}</button>
+    </form>
+    {% if bengala.titular_atual_id %}
+    <form method="post" action="{% url 'bengala_vinculo' bengala.pk %}">
+      {% csrf_token %}
+      <button class="btn btn-contorno" type="submit" name="acao" value="desvincular">Desvincular de {{ bengala.titular_atual_nome }}</button>
+    </form>
+    {% endif %}
+    {% endif %}
+  </section>
+</div>
+
+<section class="cartao" aria-labelledby="t-config">
+  <h2 id="t-config">Calibração e alertas</h2>
+  {% if configuracao %}
+  <p class="text-secondary">Valores gravados na tabela <code>configuracao</code>. Quem ajusta é o app, pelo Bluetooth.</p>
+  <dl class="dados dados-colunas">
+    <dt>Altura do sensor inferior</dt><dd>{{ configuracao.altura_sensor_cm }} cm</dd>
+    <dt>Ângulo do sensor inferior</dt><dd>{{ configuracao.angulo_sensor_graus }}°</dd>
+    <dt>Limiar de buraco</dt><dd>{{ configuracao.limiar_buraco_cm }} cm</dd>
+    <dt>Alcance do alerta frontal</dt><dd>{{ configuracao.limiar_frontal_cm }} cm</dd>
+    <dt>Intensidade da vibração</dt><dd>{{ configuracao.intensidade_vibracao }}%</dd>
+    <dt>Som</dt><dd>{% if configuracao.som_ativo %}Ligado{% else %}Desligado{% endif %}</dd>
+  </dl>
+  {% else %}
+  <p>Sem configuração gravada para esta bengala.</p>
+  {% endif %}
+</section>
+
+<section class="cartao" aria-labelledby="t-vinculos">
+  <h2 id="t-vinculos">Histórico de titulares</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Quem usou esta bengala e quando</caption>
+      <thead><tr><th scope="col">Usuário</th><th scope="col">Início</th><th scope="col">Fim</th></tr></thead>
+      <tbody>
+        {% for v in vinculos %}
+        <tr><td><a href="{% url 'usuario_detalhe' v.titular_id %}">{{ v.titular.nome }}</a></td><td>{{ v.data_inicio|date:"d/m/Y H:i" }}</td><td>{{ v.data_fim|date:"d/m/Y H:i"|default:"Vínculo atual" }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3">Nenhum vínculo registrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cartao" aria-labelledby="t-uso">
+  <h2 id="t-uso">Histórico de uso</h2>
+  <div class="table-responsive">
+    <table class="table tabela">
+      <caption>Sessões desta bengala, da mais recente para a mais antiga</caption>
+      <thead><tr><th scope="col">Início</th><th scope="col">Duração</th><th scope="col">Usuário</th><th scope="col">Distância</th><th scope="col">Detecções</th><th scope="col">S.O.S.</th><th scope="col">Ações</th></tr></thead>
+      <tbody>
+        {% for s in pagina %}
+        <tr>
+          <td>{{ s.inicio|date:"d/m/Y H:i" }}</td>
+          <td>{{ s|duracao|default:"Em andamento" }}</td>
+          <td>{{ s.titular.nome }}</td>
+          <td>{% if s.distancia_m is not None %}{{ s.distancia_m|floatformat:0 }} m{% else %}—{% endif %}</td>
+          <td>{{ s.n_eventos }}</td>
+          <td>{{ s.n_sos }}</td>
+          <td><a class="btn btn-sm btn-contorno" href="{% url 'sessao_detalhe' s.pk %}">Ver sessão<span class="visually-hidden"> de {{ s.inicio|date:"d/m/Y H:i" }}</span></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">Nenhuma sessão registrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "painel/_paginacao.html" %}
+</section>
+{% endblock %}
