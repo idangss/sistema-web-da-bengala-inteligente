@@ -4,3 +4,11 @@ __pycache__/
 *.pyc
 staticfiles/
 *.sqlite3
+
+# Exportações do banco: têm dados e login dos usuários, não vão para o GitHub
+bengala.sql
+bengala_tidb.sql
+
+# Vercel
+.vercel/
+.env.local

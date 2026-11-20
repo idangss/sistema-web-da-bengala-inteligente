@@ -1,5 +1,7 @@
 # Bengala Inteligente: site administrativo e API
 
+> **Produção na nuvem:** o site roda na Vercel com o banco no TiDB Cloud. O passo a passo está em [`DEPLOY_VERCEL.md`](DEPLOY_VERCEL.md). A seção 7 (Raspberry Pi) ficou só como referência.
+
 Site em Django para administrar o banco da bengala, e API (Django REST Framework) que recebe os dados do app Android.
 
 - **Site:** 6 telas (Login, Painel, Usuários, Bengalas, Sensores, Eventos). Só administradores entram.

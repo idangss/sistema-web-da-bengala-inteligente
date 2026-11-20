@@ -1,7 +1,12 @@
 import os
 from pathlib import Path
 
+import pymysql
 from dotenv import load_dotenv
+
+# Driver do banco em Python puro: instala na Vercel sem compilar nada.
+# Funciona igual com o MariaDB do PC e com o TiDB Cloud.
+pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -56,11 +61,14 @@ TEMPLATES = [
     },
 ]
 
-# Banco oficial: MariaDB/MySQL. A estrutura das tabelas vem do schema.sql;
-# o Django só cria as tabelas dele mesmo (auth_user, django_session...).
+# Banco: MariaDB no PC ou TiDB Cloud em produção (Vercel). A estrutura das
+# tabelas vem do schema.sql; o Django só cria as tabelas dele mesmo
+# (auth_user, django_session...).
+#   PC:     DB_ENGINE vazio (usa o MySQL/MariaDB padrão do Django), DB_SSL=False
+#   Vercel: DB_ENGINE=django_tidb, DB_SSL=True
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": os.getenv("DB_ENGINE") or "django.db.backends.mysql",
         "NAME": os.getenv("DB_NAME", "bengala"),
         "USER": os.getenv("DB_USER", "api_bengala"),
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
@@ -68,10 +76,19 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT", "3306"),
         "OPTIONS": {
             "charset": "utf8mb4",
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            # O banco guarda horário de Manaus (-04:00, sem horário de verão).
+            # Fixar o fuso da conexão faz o CURRENT_TIMESTAMP das tabelas
+            # gravar o mesmo horário que o Django, no PC e na nuvem (UTC).
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES', time_zone='-04:00'",
         },
     }
 }
+
+# O TiDB Cloud só aceita conexão criptografada (TLS).
+if os.getenv("DB_SSL", "False") == "True":
+    import certifi
+
+    DATABASES["default"]["OPTIONS"]["ssl"] = {"ca": certifi.where()}
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -112,6 +129,8 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 14
 X_FRAME_OPTIONS = "DENY"
 
 if not DEBUG:
+    # Na Vercel o HTTPS termina no proxy dela, que avisa por este cabeçalho.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = os.getenv("COOKIE_SEGURO", "False") == "True"
     CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
     STORAGES = {
