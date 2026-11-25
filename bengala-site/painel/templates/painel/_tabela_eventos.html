@@ -35,7 +35,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="6">Nenhum evento encontrado.</td></tr>
+      <tr><td colspan="6" class="vazio-celula">{% include "painel/_vazio.html" with titulo="Nenhum evento por aqui" texto="Não há registros com esses filtros." %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

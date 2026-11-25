@@ -41,7 +41,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="7">Nenhuma bengala encontrada.</td></tr>
+      <tr><td colspan="7" class="vazio-celula">{% url 'bengalas' as url_limpar %}{% include "painel/_vazio.html" with titulo="Nenhuma bengala encontrada" texto="Nenhum dispositivo combina com a busca e o status escolhidos." limpar=url_limpar %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -2,7 +2,7 @@
 {% load static painel_extras %}
 {% block titulo %}Sensores{% endblock %}
 {% block conteudo %}
-<h1>Sensores</h1>
+<h1>Monitoramento dos sensores</h1>
 
 {% if not lista %}
 <p>Nenhuma bengala ativa cadastrada.</p>
@@ -29,7 +29,7 @@
 <section class="cartao" aria-labelledby="t-grafico">
   <h2 id="t-grafico">Bateria e sinal nas últimas leituras</h2>
   {% if leituras %}
-  <div class="area-grafico"><canvas id="grafico-telemetria" role="img" aria-label="Gráfico de linha da bateria e do sinal Bluetooth. Os mesmos números estão na tabela abaixo."></canvas></div>
+  <div class="area-grafico nv-carregando"><canvas id="grafico-telemetria" role="img" aria-label="Gráfico de linha da bateria e do sinal Bluetooth. Os mesmos números estão na tabela abaixo."></canvas></div>
   <details class="mt-2">
     <summary>Ver as leituras em tabela</summary>
     <table class="table tabela mt-2">

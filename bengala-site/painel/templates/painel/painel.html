@@ -3,7 +3,23 @@
 {% block titulo %}Painel{% endblock %}
 {% block css_extra %}<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">{% endblock %}
 {% block conteudo %}
-<h1>Painel</h1>
+<div class="cabecalho-pagina">
+  <div>
+    <h1>Painel geral</h1>
+    <p class="text-secondary mb-0">Resumo da operação das bengalas.</p>
+  </div>
+</div>
+
+{% if contadores.sos_abertos %}
+<div class="alerta-sos" role="alert">
+  <span class="alerta-icone" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
+  <span class="txt">
+    <strong style="font-size:18px">{{ contadores.sos_abertos }} S.O.S. em aberto</strong>
+    <span>Há pedido{{ contadores.sos_abertos|pluralize }} de socorro aguardando atendimento.</span>
+  </span>
+  <a class="btn" href="{% url 'eventos' %}">Ver eventos</a>
+</div>
+{% endif %}
 
 <section aria-labelledby="titulo-indicadores">
   <h2 id="titulo-indicadores" class="visually-hidden">Indicadores</h2>
@@ -12,7 +28,7 @@
     <li class="indicador"><span class="indicador-valor">{{ contadores.bengalas }}</span><span class="indicador-rotulo">bengalas cadastradas</span></li>
     <li class="indicador"><span class="indicador-valor">{{ contadores.conectadas }}</span><span class="indicador-rotulo">bengalas conectadas agora</span></li>
     <li class="indicador"><span class="indicador-valor">{{ contadores.deteccoes_7_dias }}</span><span class="indicador-rotulo">detecções nos últimos 7 dias</span></li>
-    <li class="indicador {% if contadores.sos_abertos %}indicador-alerta{% endif %}"><span class="indicador-valor">{{ contadores.sos_abertos }}</span><span class="indicador-rotulo">S.O.S. em aberto</span></li>
+    <li class="indicador {% if contadores.sos_abertos %}indicador-alerta{% endif %}"><span class="indicador-valor">{{ contadores.sos_total }}</span><span class="indicador-rotulo">S.O.S. total</span></li>
   </ul>
 </section>
 
@@ -20,7 +36,7 @@
   <section class="cartao" aria-labelledby="titulo-grafico">
     <h2 id="titulo-grafico">Detecções por dia</h2>
     <p class="text-secondary">Obstáculos, buracos e degraus registrados nos últimos 7 dias.</p>
-    <div class="area-grafico"><canvas id="grafico-dias" role="img" aria-label="Gráfico de barras das detecções por dia. Os mesmos números estão na tabela abaixo."></canvas></div>
+    <div class="area-grafico nv-carregando"><canvas id="grafico-dias" role="img" aria-label="Gráfico de barras das detecções por dia. Os mesmos números estão na tabela abaixo."></canvas></div>
     <details class="mt-2">
       <summary>Ver os números em tabela</summary>
       <table class="table tabela mt-2">
@@ -39,7 +55,7 @@
       {{ localizacao.origem|lower }} em {{ localizacao.quando|date:"d/m/Y H:i" }}.<br>
       Coordenadas {{ localizacao.lat|coordenada }}, {{ localizacao.lng|coordenada }}.
     </p>
-    <div id="mapa" class="mapa" role="region" aria-label="Mapa com a última localização registrada"></div>
+    <div id="mapa" class="mapa nv-carregando" role="region" aria-label="Mapa com a última localização registrada"></div>
     {% else %}
     <p>Nenhuma localização registrada de usuário com consentimento.</p>
     {% endif %}
@@ -66,7 +82,7 @@
           <td>{{ b.ultima_comunicacao|date:"d/m/Y H:i"|default:"Nunca" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">Nenhuma bengala cadastrada.</td></tr>
+        <tr><td colspan="5" class="vazio-celula">{% include "painel/_vazio.html" with titulo="Nenhuma bengala ainda" texto="Cadastre a primeira bengala para acompanhar o status aqui." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

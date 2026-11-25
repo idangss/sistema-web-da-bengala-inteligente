@@ -1,53 +1,156 @@
 {% load static %}<!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-tema="claro" data-pagina="{% block pagina %}sistema{% endblock %}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}Painel{% endblock %} · Bengala Inteligente</title>
+  <title>{% block titulo %}Painel{% endblock %} · Norva</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'painel/img/norva-simbolo.svg' %}">
+  <script>
+    /* Tema, menu recolhido e loading antes da página aparecer (evita piscar). */
+    (function () {
+      var h = document.documentElement;
+      try {
+        var t = localStorage.getItem("nv-tema");
+        var escuro = t ? t === "escuro" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        h.setAttribute("data-tema", escuro ? "escuro" : "claro");
+        h.setAttribute("data-bs-theme", escuro ? "dark" : "light");
+        if (localStorage.getItem("nv-recolhido") === "1") h.classList.add("nv-recolhido");
+        var posLogin = sessionStorage.getItem("nv-pos-login") === "1" && h.getAttribute("data-pagina") !== "login";
+        if (posLogin) { h.classList.add("nv-abrindo", "nv-curto"); sessionStorage.removeItem("nv-pos-login"); }
+        else if (!sessionStorage.getItem("nv-visto")) { h.classList.add("nv-abrindo"); }
+        sessionStorage.setItem("nv-visto", "1");
+      } catch (e) {}
+    })();
+  </script>
   <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
   <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}" rel="stylesheet">
   {% block css_extra %}{% endblock %}
   <link href="{% static 'painel/css/site.css' %}" rel="stylesheet">
 </head>
 <body>
+  <div class="nv-loader" id="nv-loader" role="status" aria-live="polite">
+    <span class="visually-hidden">Carregando Norva…</span>
+    <svg class="nv-mark" viewBox="0 0 200 200" aria-hidden="true">
+      <path class="nv-ring" pathLength="1" d="M169.28 60 A80 80 0 1 1 140 30.72"/>
+      <path class="nv-accent" pathLength="1" d="M34.32 82.4 A68 68 0 0 1 82.4 34.32"/>
+      <path class="nv-accent" pathLength="1" d="M188.87 123.81 A92 92 0 0 1 115.97 190.6"/>
+      <g class="nv-needle">
+        <polygon points="168,100 100,86 100,114" fill="#F2B705" stroke="#F2B705"/>
+        <polygon class="costas" points="46,100 100,86 100,114"/>
+      </g>
+      <circle class="nv-pivot" cx="100" cy="100" r="5.5"/>
+      <circle class="nv-dot d1" cx="167.2" cy="32.8" r="6" fill="#F2B705"/>
+      <circle class="nv-dot d2" cx="177.8" cy="22.2" r="4.6" fill="#F2B705"/>
+      <circle class="nv-dot d3" cx="187" cy="13" r="3.3" fill="#F2B705"/>
+    </svg>
+    <div class="nv-word" aria-hidden="true">
+      <span class="nv-name">Norva</span>
+      <span class="nv-tag">AUTONOMIA EM CADA PASSO</span>
+    </div>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="logo-branca" viewBox="0 0 200 200">
+      <path d="M169.28 60 A80 80 0 1 1 140 30.72" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+      <path d="M34.32 82.4 A68 68 0 0 1 82.4 34.32" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M188.87 123.81 A92 92 0 0 1 115.97 190.6" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+      <g transform="rotate(-45 100 100)" stroke-linejoin="round" stroke-width="3">
+        <polygon points="168,100 100,86 100,114" fill="#F2B705" stroke="#F2B705"/>
+        <polygon points="46,100 100,86 100,114" fill="#FFFFFF" stroke="#FFFFFF"/>
+      </g>
+      <circle cx="100" cy="100" r="5.5" fill="#0B2545"/>
+      <circle cx="167.2" cy="32.8" r="6" fill="#F2B705"/>
+      <circle cx="177.8" cy="22.2" r="4.6" fill="#F2B705"/>
+      <circle cx="187" cy="13" r="3.3" fill="#F2B705"/>
+    </symbol>
+    <symbol id="logo-tema" viewBox="0 0 200 200">
+      <path d="M169.28 60 A80 80 0 1 1 140 30.72" fill="none" style="stroke:var(--tinta)" stroke-width="11" stroke-linecap="round"/>
+      <path d="M34.32 82.4 A68 68 0 0 1 82.4 34.32" fill="none" style="stroke:var(--tinta)" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M188.87 123.81 A92 92 0 0 1 115.97 190.6" fill="none" style="stroke:var(--tinta)" stroke-width="3.2" stroke-linecap="round"/>
+      <g transform="rotate(-45 100 100)" stroke-linejoin="round" stroke-width="3">
+        <polygon points="168,100 100,86 100,114" fill="#F2B705" stroke="#F2B705"/>
+        <polygon points="46,100 100,86 100,114" style="fill:var(--tinta);stroke:var(--tinta)"/>
+      </g>
+      <circle cx="100" cy="100" r="5.5" style="fill:var(--pivo)"/>
+      <circle cx="167.2" cy="32.8" r="6" fill="#F2B705"/>
+      <circle cx="177.8" cy="22.2" r="4.6" fill="#F2B705"/>
+      <circle cx="187" cy="13" r="3.3" fill="#F2B705"/>
+    </symbol>
+  </svg>
+
   <a class="pular-link" href="#conteudo">Pular para o conteúdo</a>
   {% block corpo %}
-  <div class="layout">
-    <header class="lateral" aria-label="Navegação principal">
+  <div class="layout" id="layout">
+    <aside class="lateral" id="menu-lateral" aria-label="Navegação principal">
       <div class="marca">
-        <i class="bi bi-person-walking" aria-hidden="true"></i>
-        <span>Bengala Inteligente</span>
+        <svg width="48" height="48" aria-hidden="true"><use href="#logo-branca"/></svg>
+        <span class="marca-texto">
+          <span class="wordmark" style="font-size:26px">Norva</span>
+          <small>Painel administrativo</small>
+        </span>
       </div>
-      <nav aria-label="Menu">
+      <nav class="nv-menu" aria-label="Menu">
+        <span class="nv-indicador" id="nv-indicador" aria-hidden="true"></span>
         <ul class="menu">
-          <li><a href="{% url 'painel' %}" {% if secao == 'painel' %}aria-current="page"{% endif %}><i class="bi bi-speedometer2" aria-hidden="true"></i> Painel</a></li>
-          <li><a href="{% url 'usuarios' %}" {% if secao == 'usuarios' %}aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Usuários</a></li>
-          <li><a href="{% url 'bengalas' %}" {% if secao == 'bengalas' %}aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Bengalas</a></li>
-          <li><a href="{% url 'sensores' %}" {% if secao == 'sensores' %}aria-current="page"{% endif %}><i class="bi bi-activity" aria-hidden="true"></i> Sensores</a></li>
-          <li><a href="{% url 'eventos' %}" {% if secao == 'eventos' %}aria-current="page"{% endif %}><i class="bi bi-list-ul" aria-hidden="true"></i> Eventos</a></li>
+          <li><a href="{% url 'painel' %}" title="Painel" {% if secao == 'painel' %}aria-current="page"{% endif %}><i class="bi bi-grid-1x2" aria-hidden="true"></i><span class="rotulo">Painel</span></a></li>
+          <li><a href="{% url 'usuarios' %}" title="Usuários" {% if secao == 'usuarios' %}aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i><span class="rotulo">Usuários</span></a></li>
+          <li><a href="{% url 'bengalas' %}" title="Bengalas" {% if secao == 'bengalas' %}aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i><span class="rotulo">Bengalas</span></a></li>
+          <li><a href="{% url 'sensores' %}" title="Sensores" {% if secao == 'sensores' %}aria-current="page"{% endif %}><i class="bi bi-activity" aria-hidden="true"></i><span class="rotulo">Sensores</span></a></li>
+          <li><a href="{% url 'eventos' %}" title="Eventos" {% if secao == 'eventos' %}aria-current="page"{% endif %}><i class="bi bi-clock-history" aria-hidden="true"></i><span class="rotulo">Eventos</span></a></li>
         </ul>
       </nav>
-      <div class="conta">
-        <p class="mb-2">Conectado como<br><strong>{{ user.email }}</strong></p>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-amarelo w-100"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair</button>
-        </form>
-      </div>
-    </header>
+      <button type="button" class="recolher" id="nv-recolher" aria-controls="menu-lateral" aria-expanded="true" title="Recolher menu"><i class="bi bi-chevron-double-left" aria-hidden="true"></i><span class="rotulo">Recolher menu</span></button>
+    </aside>
+    <div class="fundo-menu" id="nv-fundo-menu" hidden></div>
 
-    <main id="conteudo" class="principal" tabindex="-1">
-      {% if messages %}
-      <div role="status" aria-live="polite">
-        {% for m in messages %}
-        <div class="alert {% if m.tags == 'error' %}alert-danger{% elif m.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">{{ m }}</div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% block conteudo %}{% endblock %}
-    </main>
+    <div class="area">
+      <header class="topo">
+        <button type="button" class="btn btn-contorno btn-icone so-movel" id="nv-abrir-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-lateral"><i class="bi bi-list" aria-hidden="true"></i></button>
+        <span class="marca-movel so-movel"><svg width="32" height="32" aria-hidden="true"><use href="#logo-tema"/></svg><span class="wordmark" style="font-size:22px">Norva</span></span>
+        <button type="button" class="busca-btn" id="nv-abrir-busca" aria-label="Buscar (Ctrl+K)"><i class="bi bi-search" aria-hidden="true"></i><span class="txt" aria-hidden="true">Buscar usuário, bengala…</span><kbd aria-hidden="true">Ctrl K</kbd></button>
+        <span class="espaco"></span>
+        <button type="button" class="btn btn-contorno btn-icone" data-tema-btn aria-pressed="false" aria-label="Tema escuro"><i class="bi bi-moon" aria-hidden="true"></i></button>
+        <div class="conta">
+          <span class="conta-email">Conectado como<br><strong>{{ user.email }}</strong></span>
+          <form method="post" action="{% url 'logout' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-contorno" data-sem-espera><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair</button>
+          </form>
+        </div>
+      </header>
+
+      <main id="conteudo" class="principal" tabindex="-1">
+        {% if messages %}
+        <div class="nv-mensagens" role="status" aria-live="polite">
+          {% for m in messages %}
+          <div class="alert {% if m.tags == 'error' %}alert-danger{% elif m.tags == 'success' %}alert-success{% else %}alert-info{% endif %}" data-tipo="{{ m.tags }}">{{ m }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% block conteudo %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div class="fundo-camada" id="nv-fundo-camada" hidden></div>
+  <div class="busca" id="nv-busca" role="dialog" aria-modal="true" aria-label="Busca global" hidden
+       data-url-painel="{% url 'painel' %}" data-url-usuarios="{% url 'usuarios' %}" data-url-usuario-novo="{% url 'usuario_novo' %}"
+       data-url-bengalas="{% url 'bengalas' %}" data-url-bengala-nova="{% url 'bengala_nova' %}"
+       data-url-sensores="{% url 'sensores' %}" data-url-eventos="{% url 'eventos' %}">
+    <div class="busca-campo">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <label for="nv-busca-input" class="visually-hidden">Buscar telas, usuários ou bengalas</label>
+      <input id="nv-busca-input" type="text" role="combobox" aria-expanded="true" aria-controls="nv-busca-lista" aria-autocomplete="list" aria-activedescendant="" placeholder="Ir para uma tela ou buscar usuário, bengala…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="busca-lista" id="nv-busca-lista" role="listbox" aria-label="Resultados"></ul>
+    <div class="busca-rodape" aria-hidden="true"><span><kbd>↑</kbd> <kbd>↓</kbd> navegar</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> fechar</span></div>
+    <p class="visually-hidden" id="nv-busca-status" aria-live="polite"></p>
   </div>
   {% endblock %}
+
+  <div class="toasts" id="nv-toasts" role="status" aria-live="polite"></div>
+  <script src="{% static 'painel/js/norva.js' %}"></script>
   {% block js %}{% endblock %}
 </body>
 </html>

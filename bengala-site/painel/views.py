@@ -49,6 +49,7 @@ def painel(request):
         "conectadas": sum(1 for b in bengalas if b.conectada),
         "deteccoes_7_dias": sum(d["total"] for d in por_dia),
         "sos_abertos": AlertaSos.objects.filter(status="DISPARADO").count(),
+        "sos_total": AlertaSos.objects.count(),
     }
     # Os dados dos gráficos e do mapa vão para o HTML via json_script, nunca fixos.
     grafico = {
